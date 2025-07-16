@@ -1,39 +1,38 @@
--- ShadowHub GUI with Skeleton ESP and Fullbright
--- Works on most executors (like Xeno)
-
--- === Setup UI ===
 local player = game.Players.LocalPlayer
-local screenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ShadowHub"
 screenGui.ResetOnSpawn = false
+screenGui.Parent = game:GetService("CoreGui")
 
-local frame = Instance.new("Frame", screenGui)
+local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 300, 0, 300)
 frame.Position = UDim2.new(0, 20, 0, 20)
 frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 frame.BorderSizePixel = 0
 frame.Active = true
 frame.Draggable = true
+frame.Parent = screenGui
 
--- Tabs
-local mainTab = Instance.new("Frame", frame)
+local mainTab = Instance.new("Frame")
 mainTab.Size = UDim2.new(1, 0, 1, -30)
 mainTab.Position = UDim2.new(0, 0, 0, 30)
 mainTab.BackgroundTransparency = 1
 mainTab.Name = "MainTab"
+mainTab.Parent = frame
 
 local visualsTab = mainTab:Clone()
 visualsTab.Name = "VisualsTab"
 visualsTab.Visible = false
 visualsTab.Parent = frame
 
-local mainTabBtn = Instance.new("TextButton", frame)
+local mainTabBtn = Instance.new("TextButton")
 mainTabBtn.Size = UDim2.new(0.5, 0, 0, 30)
 mainTabBtn.Text = "Main"
 mainTabBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 mainTabBtn.TextColor3 = Color3.new(1, 1, 1)
 mainTabBtn.Font = Enum.Font.GothamBold
 mainTabBtn.TextSize = 16
+mainTabBtn.Parent = frame
 
 local visualTabBtn = mainTabBtn:Clone()
 visualTabBtn.Text = "Visuals"
@@ -55,13 +54,12 @@ visualTabBtn.MouseButton1Click:Connect(function()
     visualTabBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 end)
 
--- === MainTab Features ===
 local ws = 16
 local jp = 50
 local infJumpEnabled = false
 
 local function createToggle(tab, label, y, callback)
-    local btn = Instance.new("TextButton", tab)
+    local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, -40, 0, 35)
     btn.Position = UDim2.new(0, 20, 0, y)
     btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
@@ -69,6 +67,7 @@ local function createToggle(tab, label, y, callback)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 16
     btn.Text = label .. ": OFF"
+    btn.Parent = tab
 
     local state = false
     btn.MouseButton1Click:Connect(function()
@@ -78,14 +77,12 @@ local function createToggle(tab, label, y, callback)
     end)
 end
 
--- Infinite Jump
 createToggle(mainTab, "Infinite Jump", 10, function(state)
     infJumpEnabled = state
 end)
 
--- Sliders
 local function makeInput(tab, label, y, default, callback)
-    local lbl = Instance.new("TextLabel", tab)
+    local lbl = Instance.new("TextLabel")
     lbl.Text = label
     lbl.Position = UDim2.new(0, 20, 0, y)
     lbl.Size = UDim2.new(0, 100, 0, 25)
@@ -93,8 +90,9 @@ local function makeInput(tab, label, y, default, callback)
     lbl.BackgroundTransparency = 1
     lbl.Font = Enum.Font.Gotham
     lbl.TextSize = 14
+    lbl.Parent = tab
 
-    local input = Instance.new("TextBox", tab)
+    local input = Instance.new("TextBox")
     input.Text = tostring(default)
     input.Position = UDim2.new(0, 130, 0, y)
     input.Size = UDim2.new(0, 100, 0, 25)
@@ -102,6 +100,8 @@ local function makeInput(tab, label, y, default, callback)
     input.TextColor3 = Color3.new(1, 1, 1)
     input.Font = Enum.Font.Gotham
     input.TextSize = 14
+    input.ClearTextOnFocus = false
+    input.Parent = tab
 
     input.FocusLost:Connect(function()
         local val = tonumber(input.Text)
@@ -112,7 +112,6 @@ end
 makeInput(mainTab, "WalkSpeed", 55, ws, function(v) ws = v end)
 makeInput(mainTab, "JumpPower", 90, jp, function(v) jp = v end)
 
--- Keep WalkSpeed/JumpPower applied
 spawn(function()
     while true do
         local char = player.Character
@@ -127,7 +126,6 @@ spawn(function()
     end
 end)
 
--- Infinite Jump
 local uis = game:GetService("UserInputService")
 uis.InputBegan:Connect(function(input, gpe)
     if gpe or not infJumpEnabled then return end
@@ -140,7 +138,6 @@ uis.InputBegan:Connect(function(input, gpe)
     end
 end)
 
--- === Skeleton ESP ===
 local adornments = {}
 
 local function clearSkeleton()
@@ -158,7 +155,7 @@ local function createSkeleton(plr)
             adorn.Adornee = part
             adorn.AlwaysOnTop = true
             adorn.ZIndex = 10
-            adorn.Size = part.Size + Vector3.new(0.1,0.1,0.1)
+            adorn.Size = part.Size + Vector3.new(0.1, 0.1, 0.1)
             adorn.Transparency = 0.3
             adorn.Color3 = Color3.new(1, 0, 0)
             adorn.Parent = screenGui
@@ -167,29 +164,29 @@ local function createSkeleton(plr)
     end
 end
 
--- === Visual Toggles ===
 local skeletonOn = false
 local fullbrightOn = false
 
-makeToggle(visualsTab, "Skeleton ESP", 10, function(state)
+createToggle(visualsTab, "Skeleton ESP", 10, function(state)
     skeletonOn = state
     if not state then clearSkeleton() end
 end)
 
-makeToggle(visualsTab, "Fullbright", 55, function(state)
+createToggle(visualsTab, "Fullbright", 55, function(state)
     fullbrightOn = state
+    local lighting = game:GetService("Lighting")
     if state then
-        game:GetService("Lighting").Ambient = Color3.new(1,1,1)
-        game:GetService("Lighting").Brightness = 2
-        game:GetService("Lighting").ClockTime = 12
+        lighting.Ambient = Color3.new(1, 1, 1)
+        lighting.Brightness = 2
+        lighting.ClockTime = 12
     else
-        game:GetService("Lighting").Ambient = Color3.new(0.5,0.5,0.5)
-        game:GetService("Lighting").Brightness = 1
+        lighting.Ambient = Color3.new(0.5, 0.5, 0.5)
+        lighting.Brightness = 1
     end
 end)
 
--- Update visuals
-game:GetService("RunService").RenderStepped:Connect(function()
+local runService = game:GetService("RunService")
+runService.RenderStepped:Connect(function()
     if skeletonOn then
         clearSkeleton()
         for _, plr in pairs(game.Players:GetPlayers()) do
