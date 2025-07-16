@@ -55,6 +55,107 @@ visualTabBtn.MouseButton1Click:Connect(function()
     visualTabBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 end)
 
+-- === MainTab Features ===
+local ws = 16
+local jp = 50
+local infJumpEnabled = false
+
+local function createSlider(tab, label, y, default, max, callback)
+    local lbl = Instance.new("TextLabel", tab)
+    lbl.Position = UDim2.new(0, 20, 0, y)
+    lbl.Size = UDim2.new(1, -40, 0, 20)
+    lbl.Text = label .. ": " .. tostring(default)
+    lbl.TextColor3 = Color3.new(1, 1, 1)
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 14
+    lbl.BackgroundTransparency = 1
+
+    local slider = Instance.new("Frame", tab)
+    slider.Position = UDim2.new(0, 20, 0, y + 25)
+    slider.Size = UDim2.new(1, -40, 0, 15)
+    slider.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+
+    local fill = Instance.new("Frame", slider)
+    fill.Size = UDim2.new(default / max, 0, 1, 0)
+    fill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+
+    local knob = Instance.new("TextButton", slider)
+    knob.Size = UDim2.new(0, 15, 1, 0)
+    knob.Position = UDim2.new(default / max, -7, 0, 0)
+    knob.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
+    knob.Text = ""
+
+    local dragging = false
+
+    knob.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+    end)
+    knob.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+    end)
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local rel = math.clamp(input.Position.X - slider.AbsolutePosition.X, 0, slider.AbsoluteSize.X)
+            local pct = rel / slider.AbsoluteSize.X
+            local val = math.floor(pct * max)
+            fill.Size = UDim2.new(pct, 0, 1, 0)
+            knob.Position = UDim2.new(pct, -7, 0, 0)
+            lbl.Text = label .. ": " .. val
+            callback(val)
+        end
+    end)
+end
+
+createSlider(mainTab, "WalkSpeed", 10, ws, 300, function(v) ws = v end)
+createSlider(mainTab, "JumpPower", 80, jp, 300, function(v) jp = v end)
+
+local function createToggle(tab, label, y, callback)
+    local btn = Instance.new("TextButton", tab)
+    btn.Size = UDim2.new(1, -40, 0, 35)
+    btn.Position = UDim2.new(0, 20, 0, y)
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 16
+    btn.Text = label .. ": OFF"
+
+    local state = false
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        btn.Text = label .. ": " .. (state and "ON" or "OFF")
+        callback(state)
+    end)
+end
+
+createToggle(mainTab, "Infinite Jump", 150, function(state)
+    infJumpEnabled = state
+end)
+
+-- Keep WalkSpeed/JumpPower applied
+game:GetService("RunService").Heartbeat:Connect(function()
+    local char = player.Character
+    if char then
+        local hum = char:FindFirstChildWhichIsA("Humanoid")
+        if hum then
+            hum.WalkSpeed = ws
+            hum.JumpPower = jp
+        end
+    end
+end)
+
+-- Infinite Jump handler
+local uis = game:GetService("UserInputService")
+uis.InputBegan:Connect(function(input, gpe)
+    if gpe or not infJumpEnabled then return end
+    if input.KeyCode == Enum.KeyCode.Space then
+        local char = player.Character
+        if char then
+            local hum = char:FindFirstChildWhichIsA("Humanoid")
+            if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+        end
+    end
+end)
+
 -- === Skeleton ESP ===
 local function createSkeleton(plr)
     local char = plr.Character
@@ -134,5 +235,3 @@ game:GetService("RunService").RenderStepped:Connect(function()
         end
     end
 end)
-
--- Add more features in mainTab if needed
